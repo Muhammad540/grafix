@@ -1,3 +1,56 @@
+/**
+ * =======================================================================================
+ * 3D WIREFRAME RENDERING ENGINE (Software Renderer)
+ * =======================================================================================
+ * 
+ * This program implements a classic "3D Pipeline" to render a rotating cube on a 
+ * 128x64 OLED display. Since the SSD1306 has no GPU, all mathematical calculations
+ * (Rotation, Projection, Rasterization) are performed on the Arduino's CPU.
+ * 
+ * THE RENDERING PIPELINE:
+ * The 3D effect is achieved by passing every vertex of the cube through a series of 
+ * transformation functions. The data flows like this:
+ * 
+ *    [Model Space] -> [World Space] -> [View Space] -> [Screen Space]
+ * 
+ * 1. DEFINITION (Model Space):
+ *    The cube is defined by 8 points (vertices) centered at (0,0,0). 
+ *    Coordinates range roughly from -0.7 to +0.7, this is tuneable
+ * 
+ * 2. ROTATION (World Space):
+ *    We apply a Rotation Matrix to every point. The `rotate_xz` function spins points 
+ *    around the Y-axis link to formula: https://en.wikipedia.org/wiki/Rotation_matrix
+ *      new_x = x * cos(angle) - z * sin(angle)
+ *      new_z = x * sin(angle) + z * cos(angle)
+ * 
+ * 3. TRANSLATION (View Space):
+ *    If we render the cube at (0,0,0), the "Camera" is inside the cube. 
+ *    The `translate_z` function adds a distance (`dz`) to the Z-axis to push the 
+ *    object away from the camera so it is visible in front of us.
+ * 
+ * 4. PROJECTION (Perspective Divide):
+ *    Things further away look smaller.
+ *    We divide the X and Y coordinates by the depth (Z):
+ *      x_projected = x / z
+ *      y_projected = y / z
+ *    As Z increases (gets further), the resulting X and Y get closer to 0 (the center).
+ * 
+ * 5. SCREEN MAPPING (Screen Space):
+ *    The projected points are floating point numbers (e.g -0.2 to +0.2).
+ *    We map them to physical pixels (0 to 127).
+ *    
+ *    CRITICAL: We use a fixed `scale` factor (32.0) for BOTH X and Y axes.
+ *    Do NOT stretch to fit screen width/height, otherwise the cube would look 
+ *    like a flat rectangle (cuboid) because the screen aspect ratio is 2:1.
+ * 
+ *    Final Pixel X = (Screen_Width / 2)  + (x_projected * Scale)
+ *    Final Pixel Y = (Screen_Height / 2) - (y_projected * Scale)
+ * 
+ * 6. RASTERIZATION:
+ *    We loop through the "Faces" list, which tells us which vertices connect to which.
+ *    We draw lines between these calculated pixel coordinates using the Grafix library.
+ * =======================================================================================
+ */
 #include <Arduino.h>
 #include "grafix.h"
 #include <math.h>
