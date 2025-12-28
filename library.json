@@ -1,0 +1,16 @@
+{
+  "name": "Grafix",
+  "version": "1.0.0",
+  "description": "A minimal SSD1306 OLED library.",
+  "keywords": "oled, ssd1306, graphics, display",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Muhammad540/grafix.git"
+  },
+  "frameworks": ["arduino"],
+  "platforms": ["atmelavr"],
+  "build": {
+    "includeDir": "include",
+    "srcDir": "src"
+  }
+}
